@@ -18,7 +18,11 @@ import { createChoroplethLayer, createNeutralBaseLayer } from './layers/LayerFac
  * - Configuración desde atlasConfig.ts
  * - Preparado para capas de datos
  */
-export default function LeafletMap() {
+interface LeafletMapProps {
+  isMobileSidebarOpen?: boolean;
+}
+
+export default function LeafletMap({ isMobileSidebarOpen = false }: LeafletMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMapRef = useRef<L.Map | null>(null);
   const layersRef = useRef<Map<string, L.Layer>>(new Map());
@@ -83,11 +87,16 @@ export default function LeafletMap() {
         
         // Crear capa base neutral (sin datos)
         const neutralLayer = await createNeutralBaseLayer(LeafletLib, geoJsonData, map);
-        neutralLayer.addTo(map);
-        layersRef.current.set('_neutral_base', neutralLayer);
+        
+        if (neutralLayer && map) {
+          neutralLayer.addTo(map);
+          layersRef.current.set('_neutral_base', neutralLayer);
+        }
         
         // Fit map to bounds
-        map.fitBounds(neutralLayer.getBounds(), { padding: [10, 10] });
+        if (neutralLayer) {
+          map.fitBounds(neutralLayer.getBounds(), { padding: [10, 10] });
+        }
         
         // Crear todas las capas de datos
         await createAllDataLayers(map, LeafletLib, geoJsonData, allLayerData);
@@ -272,13 +281,13 @@ export default function LeafletMap() {
 
 
   return (
-    <div className="relative w-full h-full">
+    <div className={`relative w-full h-full transition-transform duration-300 md:transform-none ${isMobileSidebarOpen ? 'transform translate-x-80' : 'transform translate-x-0'}`}>
       {/* Contenedor del mapa */}
       <div 
         ref={mapRef} 
         className="w-full h-full"
         style={{ 
-          minHeight: '100vh' 
+          minHeight: '100vh'
         }}
       />
       

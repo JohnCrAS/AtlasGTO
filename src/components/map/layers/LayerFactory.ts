@@ -130,8 +130,13 @@ export async function createNeutralBaseLayer(
   LeafletLib: typeof L,
   geoJsonData: any, // Allow any GeoJSON type to be passed
   _map: L.Map
-): Promise<L.GeoJSON> {
-  const neutralLayer = LeafletLib.geoJSON(geoJsonData, {
+): Promise<L.GeoJSON | null> {
+  try {
+    if (!LeafletLib || !geoJsonData) {
+      return null;
+    }
+
+    const neutralLayer = LeafletLib.geoJSON(geoJsonData, {
     style: (_feature?: GeoJSON.Feature) => ({
       fillColor: '#e8f4f8', // Light blue-gray
       fillOpacity: 0.3,
@@ -176,5 +181,8 @@ export async function createNeutralBaseLayer(
     }
   });
 
-  return neutralLayer;
+    return neutralLayer;
+  } catch (error) {
+    return null;
+  }
 }

@@ -32,7 +32,7 @@ export default function Header() {
           alt="Gobierno del Estado de Guanajuato"
           width={120}
           height={32}
-          className="object-contain relative z-10 drop-shadow-sm md:w-[180px] md:h-[48px]"
+          className="object-contain relative z-10 drop-shadow-sm md:w-[185px] md:h-[48px]"
         />
       </div>
       
