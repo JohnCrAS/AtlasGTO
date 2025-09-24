@@ -7,6 +7,18 @@
 
 import { GEO_CONFIG, GUANAJUATO_COLORS } from './atlasConfig';
 
+/**
+ * Gets the correct base path for assets based on the environment
+ */
+function getAssetBasePath(): string {
+  // In production (GitHub Pages), we need to include the repository name
+  if (process.env.NODE_ENV === 'production') {
+    return '/AtlasGTO';
+  }
+  // In development, no base path needed
+  return '';
+}
+
 /** Tipo para las propiedades de los municipios en el GeoJSON */
 export interface MunicipalityProperties {
   id: null;                    // ID field (usually null)
@@ -46,10 +58,15 @@ export interface MunicipalitiesGeoJSON {
  */
 export async function loadMunicipalitiesGeoJSON(): Promise<MunicipalitiesGeoJSON> {
   try {
-    const response = await fetch(GEO_CONFIG.municipios.source);
+    // Construct the full URL with the correct base path
+    const basePath = getAssetBasePath();
+    const fullUrl = `${basePath}${GEO_CONFIG.municipios.source}`;
+    console.log(`🔗 Fetching GeoJSON from: ${fullUrl}`);
+    
+    const response = await fetch(fullUrl);
     
     if (!response.ok) {
-      throw new Error(`Error cargando GeoJSON: ${response.status} ${response.statusText}`);
+      throw new Error(`Error cargando GeoJSON: ${response.status} ${response.statusText} for URL: ${fullUrl}`);
     }
     
     const geoJsonData = await response.json();

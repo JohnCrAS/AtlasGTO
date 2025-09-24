@@ -14,6 +14,18 @@
 
 import { ATLAS_LAYERS } from './atlasConfig';
 
+/**
+ * Gets the correct base path for data files based on the environment
+ */
+function getDataBasePath(): string {
+  // In production (GitHub Pages), we need to include the repository name
+  if (process.env.NODE_ENV === 'production') {
+    return '/AtlasGTO';
+  }
+  // In development, no base path needed
+  return '';
+}
+
 /** Base interface for all municipal data records */
 export interface MunicipalDataRecord {
   municipio: string;        // Código del municipio (ej: "11001")
@@ -68,17 +80,31 @@ export async function loadLayerData<T extends MunicipalDataRecord = MunicipalDat
   try {
     console.log(`📊 Loading data for layer: ${layerConfig.name}`);
     
-    const response = await fetch(layerConfig.dataSource);
+    // Construct the full URL with the correct base path
+    const basePath = getDataBasePath();
+    const fullUrl = `${basePath}${layerConfig.dataSource}`;
+    console.log(`🔗 Fetching data from: ${fullUrl}`);
+    
+    const response = await fetch(fullUrl);
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(`HTTP ${response.status}: ${response.statusText} for URL: ${fullUrl}`);
     }
 
-    const dataFile = await response.json() as DataFile<T>;
+    const rawData = await response.json();
     
     // Validate data structure
-    if (!dataFile.records || !Array.isArray(dataFile.records)) {
-      throw new Error(`Invalid data structure in ${layerConfig.dataSource}`);
+    if (!rawData.records || !Array.isArray(rawData.records)) {
+      throw new Error(`Invalid data structure in ${layerConfig.dataSource}: missing 'records' array`);
     }
+
+    // Create a proper DataFile structure with version if missing
+    const dataFile: DataFile<T> = {
+      version: rawData.version || '2024.1',
+      source: rawData.source,
+      updated: rawData.updated,
+      metadata: rawData.metadata,
+      records: rawData.records
+    };
 
     // Cache the data
     dataCache.set(layerId, dataFile);

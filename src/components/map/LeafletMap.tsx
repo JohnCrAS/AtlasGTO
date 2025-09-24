@@ -104,7 +104,15 @@ export default function LeafletMap() {
     // Función para crear todas las capas de datos
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createAllDataLayers = async (map: L.Map, LeafletLib: any, geoJsonData: any, allData: Map<string, any>) => {
-      const layerConfigs = createLayerConfigs(allData);
+      // Extract records from DataFile objects for layer configs
+      const recordsMap = new Map();
+      allData.forEach((dataFile, key) => {
+        if (dataFile && dataFile.records) {
+          recordsMap.set(key, dataFile.records);
+        }
+      });
+      
+      const layerConfigs = createLayerConfigs(recordsMap);
 
       for (const config of layerConfigs) {
         if (!config.data) {
