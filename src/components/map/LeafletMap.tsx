@@ -195,37 +195,7 @@ export default function LeafletMap() {
           maxZoom: MAP_CONFIG.tileLayer.maxZoom,
         }).addTo(map);
 
-        // Añadir un marcador de prueba en León (ciudad principal)
-        L.marker([21.1619, -101.6739])
-          .addTo(map)
-          .bindPopup(`
-            <div style="font-family: system-ui; padding: 8px;">
-              <h3 style="margin: 0 0 8px 0; color: ${GUANAJUATO_COLORS.SEGURIDAD_PAZ_SOCIAL}; font-size: 16px;">
-                León, Guanajuato
-              </h3>
-              <p style="margin: 0; font-size: 14px; color: #666;">
-                Atlas de Riesgo funcionando correctamente
-              </p>
-              <p style="margin: 4px 0 0 0; font-size: 12px; color: ${GUANAJUATO_COLORS.SEGURIDAD_PAZ_SOCIAL};">
-                🗺️ Mapa base: OpenStreetMap<br/>
-                🎨 Tema: Oficial de Guanajuato
-              </p>
-            </div>
-          `);
-
-        // Añadir marcador en Guanajuato Capital
-        L.marker([21.0190, -101.2574])
-          .addTo(map)
-          .bindPopup(`
-            <div style="font-family: system-ui; padding: 8px;">
-              <h3 style="margin: 0 0 8px 0; color: ${GUANAJUATO_COLORS.SEGURIDAD_PAZ_SOCIAL}; font-size: 16px;">
-                Guanajuato Capital
-              </h3>
-              <p style="margin: 0; font-size: 14px; color: #666;">
-                Centro del estado
-              </p>
-            </div>
-          `);
+        // Test markers removed - data layers will provide all necessary information
 
         // Guardar referencia del mapa
         leafletMapRef.current = map;

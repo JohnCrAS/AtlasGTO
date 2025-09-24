@@ -27,12 +27,12 @@ export default function Home() {
       <Header />
       
       {/* Contenido principal - full screen */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar colapsible */}
-        <Sidebar />
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Sidebar colapsible - hidden on mobile, overlay when open */}
+        <Sidebar className="md:flex" />
         
-        {/* Mapa principal - full screen */}
-        <div className="flex-1 relative">
+        {/* Mapa principal - full screen on mobile, flex-1 on desktop */}
+        <div className="flex-1 relative w-full md:w-auto">
           <LeafletMap />
         </div>
       </div>

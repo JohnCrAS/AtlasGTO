@@ -11,20 +11,38 @@ interface SidebarProps {
 
 export default function Sidebar({ className = '' }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
 
+  const toggleMobileSidebar = () => {
+    setIsMobileOpen(!isMobileOpen);
+  };
+
   return (
     <>
+      {/* Mobile overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div 
         className={`
           ${isCollapsed ? 'w-12' : 'w-80'} 
-          h-full bg-white shadow-xl border-r-2 transition-all duration-300 ease-in-out z-40 flex flex-col
+          h-full bg-white shadow-xl border-r-2 transition-all duration-300 ease-in-out z-50 flex flex-col
           ${className}
+          
+          // Mobile styles
+          md:relative md:translate-x-0
+          ${isMobileOpen ? 'fixed left-0 top-16 translate-x-0' : 'fixed left-0 top-16 -translate-x-full md:translate-x-0'}
+          md:top-0
         `}
         style={{ borderRightColor: GUANAJUATO_COLORS.SEGURIDAD_PAZ_SOCIAL + '20' }}
       >
@@ -100,6 +118,20 @@ export default function Sidebar({ className = '' }: SidebarProps) {
           </>
         )}
       </div>
+
+      {/* Mobile FAB to open sidebar */}
+      <button
+        onClick={toggleMobileSidebar}
+        className={`
+          fixed bottom-6 left-6 z-50 md:hidden
+          w-14 h-14 rounded-full shadow-lg transition-all duration-300
+          flex items-center justify-center
+          ${isMobileOpen ? 'scale-0' : 'scale-100'}
+        `}
+        style={{ backgroundColor: GUANAJUATO_COLORS.SEGURIDAD_PAZ_SOCIAL }}
+      >
+        <Layers className="w-6 h-6 text-white" />
+      </button>
     </>
   );
 }
