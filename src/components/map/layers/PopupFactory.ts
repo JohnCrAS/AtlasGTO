@@ -5,10 +5,24 @@
 import { GUANAJUATO_COLORS, RISK_INDEX_COLORS } from '@/lib/atlasConfig';
 import type { LayerConfig } from './LayerFactory';
 
+// Import LayerData interface
+interface LayerData {
+  municipio: string;
+  [key: string]: unknown;
+}
+
+// Define interfaces for popup properties
+interface PopupProperties {
+  cvegeo: string;
+  nombre: string;
+  hasData: boolean;
+  data?: Record<string, unknown>;
+}
+
 /**
  * Creates a popup with layer-specific content
  */
-export function createLayerSpecificPopup(properties: any, config: LayerConfig): string {
+export function createLayerSpecificPopup(properties: PopupProperties, config: LayerConfig): string {
   const { cvegeo, nombre, hasData, data } = properties;
   
   if (!hasData || !data) {
@@ -16,7 +30,7 @@ export function createLayerSpecificPopup(properties: any, config: LayerConfig): 
   }
 
   // Extract value using the layer's specific logic
-  const value = config.valueExtractor(data);
+  const value = config.valueExtractor(data as LayerData);
   const unit = config.unit || '';
   
   // Create layer-specific content
@@ -62,7 +76,7 @@ function createNoDataPopup(nombre: string, cvegeo: string, layerId: string): str
 /**
  * Creates content specific to each layer type
  */
-function createLayerContent(layerId: string, value: number, unit: string, data: any): string {
+function createLayerContent(layerId: string, value: number, unit: string, data: Record<string, unknown>): string {
   switch (layerId) {
     case 'indice_riesgo':
       return createRiskIndexContent(value, data);
@@ -87,7 +101,7 @@ function createLayerContent(layerId: string, value: number, unit: string, data: 
   }
 }
 
-function createRiskIndexContent(value: number, data: any): string {
+function createRiskIndexContent(value: number, data: Record<string, unknown>): string {
   const riskLevel = value >= 80 ? 'Muy Alto' :
                    value >= 60 ? 'Alto' :
                    value >= 40 ? 'Medio' :
@@ -105,64 +119,64 @@ function createRiskIndexContent(value: number, data: any): string {
       <p style="margin: 0; font-size: 12px; color: #666;">
         Nivel: ${riskLevel}
       </p>
-      ${data.top_factores ? `
+      ${(data as any).top_factores ? `
         <p style="margin: 4px 0 0 0; font-size: 11px; color: #666;">
-          Factores: ${data.top_factores.join(', ')}
+          Factores: ${(data as any).top_factores.join(', ')}
         </p>
       ` : ''}
     </div>
   `;
 }
 
-function createDisappearancesContent(value: number, unit: string, data: any): string {
+function createDisappearancesContent(value: number, unit: string, data: Record<string, unknown>): string {
   return `
     <div style="margin: 12px 0; padding: 8px; background-color: #fee; border-left: 3px solid #e53e3e; border-radius: 4px;">
       <p style="margin: 0 0 4px 0; font-weight: 600; color: #e53e3e;">
         Desapariciones: ${value} ${unit}
       </p>
       <p style="margin: 0; font-size: 12px; color: #666;">
-        Período: ${data.año}-${String(data.mes).padStart(2, '0')}
+        Período: ${(data as any).año}-${String((data as any).mes).padStart(2, '0')}
       </p>
     </div>
   `;
 }
 
-function createHomicidesContent(value: number, unit: string, data: any): string {
+function createHomicidesContent(value: number, unit: string, data: Record<string, unknown>): string {
   return `
     <div style="margin: 12px 0; padding: 8px; background-color: #fee; border-left: 3px solid #e53e3e; border-radius: 4px;">
       <p style="margin: 0 0 4px 0; font-weight: 600; color: #e53e3e;">
         Homicidios: ${value} ${unit}
       </p>
-      ${data.tasa ? `
+      ${(data as any).tasa ? `
         <p style="margin: 0; font-size: 12px; color: #666;">
-          Tasa: ${data.tasa} por 100k hab.
+          Tasa: ${(data as any).tasa} por 100k hab.
         </p>
       ` : ''}
     </div>
   `;
 }
 
-function createClandestineTapsContent(value: number, unit: string, data: any): string {
+function createClandestineTapsContent(value: number, unit: string, data: Record<string, unknown>): string {
   return `
     <div style="margin: 12px 0; padding: 8px; background-color: #fee; border-left: 3px solid #e53e3e; border-radius: 4px;">
       <p style="margin: 0 0 4px 0; font-weight: 600; color: #e53e3e;">
         Tomas Clandestinas: ${value} ${unit}
       </p>
-      ${data.superficie_km2 ? `
+      ${(data as any).superficie_km2 ? `
         <p style="margin: 0; font-size: 12px; color: #666;">
-          Densidad: ${(value / data.superficie_km2 * 100).toFixed(2)} por 100km²
+          Densidad: ${(value / (data as any).superficie_km2 * 100).toFixed(2)} por 100km²
         </p>
       ` : ''}
     </div>
   `;
 }
 
-function createSocialLagContent(value: number, data: any): string {
-  const quintil = data.quintil || Math.ceil(Math.abs(data.irs || 0) * 5);
+function createSocialLagContent(value: number, data: Record<string, unknown>): string {
+  const quintil = (data as any).quintil || Math.ceil(Math.abs((data as any).irs || 0) * 5);
   return `
     <div style="margin: 12px 0; padding: 8px; background-color: #efe; border-left: 3px solid #38a169; border-radius: 4px;">
       <p style="margin: 0 0 4px 0; font-weight: 600; color: #38a169;">
-        Rezago Social: ${data.irs?.toFixed(2) || 'N/A'}
+        Rezago Social: ${(data as any).irs?.toFixed(2) || 'N/A'}
       </p>
       <p style="margin: 0; font-size: 12px; color: #666;">
         Quintil: ${quintil} (${quintil <= 2 ? 'Bajo' : quintil <= 3 ? 'Medio' : 'Alto'})
@@ -171,9 +185,9 @@ function createSocialLagContent(value: number, data: any): string {
   `;
 }
 
-function createInstitutionalCapacityContent(value: number, unit: string, data: any): string {
-  const centros = data.centros_salud || 0;
-  const refugios = data.refugios || 0;
+function createInstitutionalCapacityContent(value: number, unit: string, data: Record<string, unknown>): string {
+  const centros = (data as any).centros_salud || 0;
+  const refugios = (data as any).refugios || 0;
   return `
     <div style="margin: 12px 0; padding: 8px; background-color: #efe; border-left: 3px solid #38a169; border-radius: 4px;">
       <p style="margin: 0 0 4px 0; font-weight: 600; color: #38a169;">
@@ -182,7 +196,7 @@ function createInstitutionalCapacityContent(value: number, unit: string, data: a
       <div style="font-size: 11px; color: #666; margin-top: 6px;">
         <div>🏥 Centros de Salud: ${centros}</div>
         <div>🏠 Refugios: ${refugios}</div>
-        <div>🏛️ Instituciones: ${data.comision_busqueda ? '✓' : '✗'} Comisión, ${data.fiscalia ? '✓' : '✗'} Fiscalía</div>
+        <div>🏛️ Instituciones: ${(data as any).comision_busqueda ? '✓' : '✗'} Comisión, ${(data as any).fiscalia ? '✓' : '✗'} Fiscalía</div>
       </div>
     </div>
   `;
@@ -203,7 +217,7 @@ function createGenericContent(layerId: string, value: number, unit: string): str
  * TODO: Implement this for when multiple layers are visible
  */
 export function createCompositePopup(
-  properties: any, 
+  properties: PopupProperties, 
   activeLayerConfigs: LayerConfig[]
 ): string {
   // This will be implemented when we need to show data from multiple layers

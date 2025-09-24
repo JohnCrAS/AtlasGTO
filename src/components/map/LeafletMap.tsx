@@ -115,8 +115,8 @@ export default function LeafletMap() {
         
         console.log(`🔍 Processing layer ${config.id}:`, {
           hasData: !!config.data,
-          recordCount: config.data?.records?.length || 0,
-          dataKeys: config.data ? Object.keys(config.data) : []
+          recordCount: config.data?.length || 0,
+          dataKeys: config.data ? Object.keys(config.data[0] || {}) : []
         });
 
         const layer = await createChoroplethLayer(LeafletLib, geoJsonData, config, map);
@@ -125,7 +125,7 @@ export default function LeafletMap() {
           layersRef.current.set(config.id, layer);
           
           // Update layer manager with data info
-          const recordCount = config.data.records.length;
+          const recordCount = config.data?.length || 0;
           layerManager.setLayerData(config.id, true, recordCount);
           
           console.log(`✅ Layer created: ${config.id} (${recordCount} records)`);
@@ -236,14 +236,16 @@ export default function LeafletMap() {
 
     initMap();
 
+    // Capture the current ref value for cleanup
+    const currentLayersRef = layersRef.current;
+
     // Cleanup al desmontar
     return () => {
       // Clean up all layers
-      const currentLayers = layersRef.current;
-      currentLayers.forEach(layer => {
+      currentLayersRef.forEach(layer => {
         layer.remove();
       });
-      currentLayers.clear();
+      currentLayersRef.clear();
       
       if (leafletMapRef.current) {
         leafletMapRef.current.remove();

@@ -7,12 +7,18 @@ import { GUANAJUATO_COLORS } from '@/lib/atlasConfig';
 import { joinDataWithGeometries, createChoroplethMapping } from '@/lib/dataJoiner';
 import { createLayerSpecificPopup } from './PopupFactory';
 
+// Generic data type for layer configurations
+interface LayerData {
+  municipio: string;
+  [key: string]: unknown;
+}
+
 export interface LayerConfig {
   id: string;
   type: 'choropleth' | 'heatmap' | 'markers';
-  data: any;
+  data: LayerData[] | undefined;
   colorScale: string[];
-  valueExtractor: (data: any) => number;
+  valueExtractor: (data: LayerData) => number;
   colorLogic: 'danger' | 'safety';
   unit?: string;
 }
@@ -21,17 +27,29 @@ export interface LayerConfig {
  * Creates a choropleth layer with layer-specific styling and popups
  */
 export async function createChoroplethLayer(
-  LeafletLib: any,
-  geoJsonData: any,
+  LeafletLib: typeof L,
+  geoJsonData: any, // Allow any GeoJSON type to be passed
   config: LayerConfig,
   map: L.Map
 ): Promise<L.GeoJSON | null> {
   console.log(`🎨 Creating choropleth for ${config.id} with ${config.colorLogic} logic`);
   
   try {
+    // Check if data is available
+    if (!config.data || config.data.length === 0) {
+      console.warn(`⚠️ No data available for layer ${config.id}`);
+      return null;
+    }
+
+    // Wrap the data in the expected DataFile format
+    const dataFile = {
+      version: '2024.1',
+      records: config.data
+    };
+
     const enhancedGeoJson = joinDataWithGeometries(
       geoJsonData, 
-      config.data, 
+      dataFile, 
       { dataSourceName: config.id }
     );
     
@@ -45,8 +63,8 @@ export async function createChoroplethLayer(
     
     // Debug: Show value distribution for this layer
     const values = enhancedGeoJson.features
-      .filter(f => f.properties.hasData)
-      .map(f => config.valueExtractor(f.properties.data))
+      .filter(f => f.properties.hasData && f.properties.data)
+      .map(f => config.valueExtractor(f.properties.data!))
       .sort((a, b) => a - b);
     
     console.log(`📊 ${config.id} value distribution:`, {
@@ -57,26 +75,26 @@ export async function createChoroplethLayer(
     });
     
     return LeafletLib.geoJSON(enhancedGeoJson, {
-      style: (feature: any) => {
-        const municipalityCode = feature.properties.cvegeo;
+      style: (feature?: GeoJSON.Feature) => {
+        const municipalityCode = feature?.properties?.cvegeo;
         const fillColor = getColor(municipalityCode);
         
         return {
           fillColor,
-          fillOpacity: feature.properties.hasData ? 0.7 : 0.3,
+          fillOpacity: feature?.properties?.hasData ? 0.7 : 0.3,
           color: GUANAJUATO_COLORS.SEGURIDAD_PAZ_SOCIAL,
           weight: 1.5,
           opacity: 0.8,
         };
       },
-      onEachFeature: (feature: any, layer: any) => {
-        const municipality = feature.properties;
-        const popupContent = createLayerSpecificPopup(municipality, config);
+      onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer) => {
+        const municipality = feature.properties || {};
+        const popupContent = createLayerSpecificPopup(municipality as any, config);
         layer.bindPopup(popupContent);
         
         // Add interaction handlers
         layer.on({
-          mouseover: (e: any) => {
+          mouseover: (e: L.LeafletMouseEvent) => {
             const targetLayer = e.target;
             targetLayer.setStyle({
               fillOpacity: 0.9,
@@ -85,14 +103,14 @@ export async function createChoroplethLayer(
             });
             targetLayer.bringToFront();
           },
-          mouseout: (e: any) => {
+          mouseout: (e: L.LeafletMouseEvent) => {
             e.target.setStyle({
-              fillOpacity: feature.properties.hasData ? 0.7 : 0.3,
+              fillOpacity: feature.properties?.hasData ? 0.7 : 0.3,
               weight: 1.5,
               opacity: 0.8,
             });
           },
-          click: (e: any) => {
+          click: (e: L.LeafletMouseEvent) => {
             map.fitBounds(e.target.getBounds(), { padding: [20, 20] });
           }
         });
@@ -109,20 +127,20 @@ export async function createChoroplethLayer(
  * Creates a neutral base layer for when no data layers are active
  */
 export async function createNeutralBaseLayer(
-  LeafletLib: any,
-  geoJsonData: any,
-  map: L.Map
+  LeafletLib: typeof L,
+  geoJsonData: any, // Allow any GeoJSON type to be passed
+  _map: L.Map
 ): Promise<L.GeoJSON> {
   const neutralLayer = LeafletLib.geoJSON(geoJsonData, {
-    style: (_feature: any) => ({
+    style: (_feature?: GeoJSON.Feature) => ({
       fillColor: '#e8f4f8', // Light blue-gray
       fillOpacity: 0.3,
       color: GUANAJUATO_COLORS.SEGURIDAD_PAZ_SOCIAL,
       weight: 1.5,
       opacity: 0.8,
     }),
-    onEachFeature: (feature: any, layer: any) => {
-      const municipality = feature.properties;
+    onEachFeature: (feature: GeoJSON.Feature, layer: L.Layer) => {
+      const municipality = feature.properties || {};
       const popupContent = `
         <div style="font-family: system-ui; padding: 12px; min-width: 200px;">
           <h3 style="margin: 0 0 8px 0; color: ${GUANAJUATO_COLORS.SEGURIDAD_PAZ_SOCIAL}; font-size: 18px; font-weight: 600;">
@@ -142,13 +160,13 @@ export async function createNeutralBaseLayer(
       
       // Simple hover effect
       layer.on({
-        mouseover: (e: any) => {
+        mouseover: (e: L.LeafletMouseEvent) => {
           e.target.setStyle({
             fillOpacity: 0.5,
             weight: 2,
           });
         },
-        mouseout: (e: any) => {
+        mouseout: (e: L.LeafletMouseEvent) => {
           e.target.setStyle({
             fillOpacity: 0.3,
             weight: 1.5,
