@@ -1,0 +1,44 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  /* Guanajuato Theme Colors - from sg.guanajuato.gob.mx */
+  --gto-blue: #6580A4;        /* Azul institucional */
+  --gto-blue-deep: #0066FF;   /* Azul profundo */
+  --gto-teal: #00A99D;        /* Verde azulado */
+  --gto-orange: #FF8200;      /* Naranja */
+  --gto-green: #32AA00;       /* Verde */
+  --gto-pink: #F45197;        /* Rosa */
+  --gto-light: #B9C8E7;       /* Azul claro */
+  
+  /* App Variables */
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --accent: var(--gto-blue);
+  --accent-foreground: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  
+  /* Guanajuato Colors for Tailwind */
+  --color-gto-blue: var(--gto-blue);
+  --color-gto-blue-deep: var(--gto-blue-deep);
+  --color-gto-teal: var(--gto-teal);
+  --color-gto-orange: var(--gto-orange);
+  --color-gto-green: var(--gto-green);
+  --color-gto-pink: var(--gto-pink);
+  --color-gto-light: var(--gto-light);
+  
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
